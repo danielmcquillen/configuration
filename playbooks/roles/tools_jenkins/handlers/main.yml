@@ -4,5 +4,5 @@
     name: jenkins 
     state: restarted
   tags:
-    manage
-    manage:start
+    - manage
+    - manage:start
