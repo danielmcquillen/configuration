@@ -4,7 +4,7 @@
     name: jenkins
     state: restarted
   tags:
-    -  manage
+    - manage
     - manage:start  
 
 - name: start nginx

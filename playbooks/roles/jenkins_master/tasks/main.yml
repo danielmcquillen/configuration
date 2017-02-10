@@ -97,7 +97,7 @@
     creates: "{{ jenkins_home }}"
   tags:
     - install
-    - install"base
+    - install:base
 
 - name: Set owner for Jenkins home
   file:
