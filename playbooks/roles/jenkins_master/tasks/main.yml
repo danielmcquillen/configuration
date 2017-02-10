@@ -26,8 +26,8 @@
     name: "{{ jenkins_group }}"
     state: present
   tags:
-    - manage
-    - manage:app-users
+    - install
+    - install:system-requirements
 
 - name: Add the jenkins user to the group
   user:
@@ -35,8 +35,8 @@
     append: yes
     groups: "{{ jenkins_group }}"
   tags:
-    - manage
-    - manage:app-users
+     - install                      
+     - install:system-requirements
 
 # Should be resolved in the next release, but until then we need to do this
 # https://issues.jenkins-ci.org/browse/JENKINS-20407
@@ -46,17 +46,23 @@
     state: directory
     owner: "{{ jenkins_user }}"
     group: "{{ jenkins_group }}"
+    tags:
+      - install
+      - install:system-requirements
 
 # TODO in Ansible 2.1 we can do apt: deb="{{ jenkins_deb_url }}"
 - name: download Jenkins package
   get_url: url="{{ jenkins_deb_url }}" dest="/tmp/{{ jenkins_deb }}"
+  tags:
+    - install
+    - install:app-requirements
 
 - name: install Jenkins package
   apt:
     deb: "/tmp/{{ jenkins_deb }}"
   tags:
     - install
-    - install:system-requirements
+    - install:app-requirements
 
 - name: Stop Jenkins
   service:
@@ -77,6 +83,8 @@
   tags:
     - java
     - jenkins
+    - install
+    - install:app-configuration
 
 - name: Set jenkins home
   lineinfile:
@@ -89,6 +97,8 @@
   tags:
     - java
     - jenkins
+    - install
+    - install:app-configuration
 
 # Move /var/lib/jenkins to Jenkins home (on the EBS)
 - name: Move /var/lib/jenkins
@@ -106,6 +116,9 @@
     state: directory
     owner: "{{ jenkins_user }}"
     group: "{{ jenkins_group }}"
+  tags:
+    - install
+    - install:app-requirements  
 
 # Symlink /var/lib/jenkins to {{ COMMON_DATA_DIR }}/jenkins
 # since Jenkins will expect its files to be in /var/lib/jenkins
