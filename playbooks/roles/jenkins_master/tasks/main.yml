@@ -7,6 +7,8 @@
   with_items: "{{ jenkins_debian_pkgs }}"
   tags:
     - jenkins
+    - install
+    - install:system-requirements
 
 - name: Install jenkins extra system packages
   apt:
@@ -16,17 +18,25 @@
   with_items: "{{ JENKINS_EXTRA_PKGS }}"
   tags:
     - jenkins
+    - install
+    - install:system-requirements
 
 - name: Create jenkins group
   group:
     name: "{{ jenkins_group }}"
     state: present
+  tags:
+    - manage
+    - manage:app-users
 
 - name: Add the jenkins user to the group
   user:
     name: "{{ jenkins_user }}"
     append: yes
     groups: "{{ jenkins_group }}"
+  tags:
+    - manage
+    - manage:app-users
 
 # Should be resolved in the next release, but until then we need to do this
 # https://issues.jenkins-ci.org/browse/JENKINS-20407
@@ -44,11 +54,17 @@
 - name: install Jenkins package
   apt:
     deb: "/tmp/{{ jenkins_deb }}"
+  tags:
+    - install
+    - install:system-requirements
 
 - name: Stop Jenkins
   service:
     name: jenkins
     state: stopped
+  tags:
+    - manage
+    - manage:stop
 
 - name: Set jvm args
   lineinfile:
@@ -79,6 +95,9 @@
   command: "mv /var/lib/jenkins {{ jenkins_home }}"
   args:
     creates: "{{ jenkins_home }}"
+  tags:
+    - install
+    - install"base
 
 - name: Set owner for Jenkins home
   file:
@@ -99,11 +118,17 @@
     group: "{{ jenkins_group }}"
   notify:
     - restart Jenkins
+  tags:
+    - install
+    - install:base
 
 # Using this instead of the user module because the user module
 # fails if the directory exists.
 - name: Set home directory for jenkins user
   shell: "usermod -d {{ jenkins_home }} {{ jenkins_user }}"
+  tags:
+    - install
+    - install:base
 
 - name: Make plugins directory
   file:
@@ -111,6 +136,9 @@
     state: directory
     owner: "{{ jenkins_user }}"
     group: "{{ jenkins_group }}"
+  tags:
+    - install
+    - install:base
 
 # We first download the plugins to a temp directory and include
 # the version in the file name.  That way, if we increment
@@ -121,11 +149,17 @@
     dest: "/tmp/{{ item.name }}_{{ item.version }}"
   with_items: "{{ jenkins_plugins }}"
   register: jenkins_plugin_downloads
+  tags:
+    - install
+    - install:base
 
 - name: Install Jenkins plugins
   command: "cp {{ item.dest }} {{ jenkins_home }}/plugins/{{ item.item.name }}.hpi"
   with_items: "{{ jenkins_plugin_downloads.results }}"
   when: item.changed
+  tags:
+    - install
+    - install:base
 
 - name: Set Jenkins plugin permissions
   file:
@@ -137,6 +171,9 @@
   when: item.changed
   notify:
     - restart Jenkins
+  tags:
+    - install
+    - install:base
 
 # We had to fork some plugins to workaround
 # certain issues.  If these changes get merged
@@ -150,6 +187,9 @@
     accept_hostkey: yes
   with_items: "{{ jenkins_custom_plugins }}"
   register: jenkins_custom_plugins_checkout
+  tags:
+    - install
+    - install:base
 
 - name: Compile custom plugins
   command: "mvn -Dmaven.test.skip=true install"
@@ -157,6 +197,9 @@
     chdir: "/tmp/{{ item.item.repo_name }}"
   with_items: "{{ jenkins_custom_plugins_checkout.results }}"
   when: item.changed
+  tags:
+    - install
+    - install:base
 
 - name: Install custom plugins
   command: mv /tmp/{{ item.item.repo_name }}/target/{{ item.item.package }}
@@ -165,6 +208,9 @@
   when: item.changed
   notify:
     - restart Jenkins
+  tags:
+    - install
+    - install:base
 
 - name: Set custom plugin permissions
   file:
@@ -174,6 +220,9 @@
     mode: "0700"
   with_items: "{{ jenkins_custom_plugins_checkout.results }}"
   when: item.changed
+  tags:
+    - install
+    - install:base
 
 # Plugins that are bundled with Jenkins are "pinned".
 # Jenkins will overwrite updated plugins with its built-in version
@@ -184,11 +233,17 @@
   args:
     creates: "{{ jenkins_home }}/plugins/{{ item }}.jpi.pinned"
   with_items: "{{ jenkins_bundled_plugins }}"
+  tags:
+    - install
+    - install:base
 
 - name: Setup nginix vhost
   template:
     src: "etc/nginx/sites-available/jenkins.j2"
     dest: "/etc/nginx/sites-available/jenkins"
+  tags:
+    - install
+    - install:vhosts
 
 - name: Enable jenkins vhost
   file:
@@ -197,8 +252,13 @@
     state: link
   notify:
     - start nginx
+  tags:
+    - install
+    - install:vhosts
 
 - include: datadog.yml
   when: COMMON_ENABLE_DATADOG
   tags:
     - datadog
+    - install
+    - install:base
