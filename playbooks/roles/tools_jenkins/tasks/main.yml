@@ -25,6 +25,9 @@
   shell: "ls {{ jenkins_home }}/plugins/*.jpi"
   register: jpi_files
   ignore_errors: true
+  tags:
+    - install
+    - install:app-configuration
 
 - name: Set the permission on jpi files
   file:
