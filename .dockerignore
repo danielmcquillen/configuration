@@ -5,3 +5,4 @@
 docker/build/*/Dockerfile
 !docker/plays/
 !util/install/
+!util/jenkins/jenkins.sh
