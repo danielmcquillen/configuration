@@ -46,9 +46,9 @@
     state: directory
     owner: "{{ jenkins_user }}"
     group: "{{ jenkins_group }}"
-    tags:
-      - install
-      - install:system-requirements
+  tags:
+    - install
+    - install:system-requirements
 
 # TODO in Ansible 2.1 we can do apt: deb="{{ jenkins_deb_url }}"
 - name: download Jenkins package
