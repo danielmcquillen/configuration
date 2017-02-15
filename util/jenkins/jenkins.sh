@@ -1,6 +1,6 @@
 #! /bin/bash -e
 
-Jenkins shell script lifted from https://github.com/jenkinsci/docker/blob/fd794015787ba07d84a7c8d4c625652e648408c5/jenkins.sh.
+# Jenkins shell script lifted from https://github.com/jenkinsci/docker/blob/fd794015787ba07d84a7c8d4c625652e648408c5/jenkins.sh.
 
 # if `docker run` first argument start with `--` the user is passing jenkins launcher arguments
 if [[ $# -lt 1 ]] || [[ "$1" == "--"* ]]; then
