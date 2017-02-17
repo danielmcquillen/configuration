@@ -1,38 +1,85 @@
-import requests
+"""
+Verifies that an index was correctly copied from one ES host to another.
+"""
+
+from itertools import izip
+
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import scan
 from argparse import ArgumentParser
+
 
 description = """
 Compare two Elasticsearch indices
 """
 
+SCAN_THRESHOLD = .9
+
 def parse_args():
-  parser = ArgumentParser(description=description)
+    """
+    Parse the arguments for the script.
+    """
+    parser = ArgumentParser(description=description)
 
-  parser.add_argument('-o', '--old', dest='old', required=True, nargs=2,
-    help='Hostname and index of old ES host, e.g. https://localhost:9200 content')
-  parser.add_argument('-n', '--new', dest='new', required=True, nargs=2,
-    help='Hostname of new ES host, e.g. https://localhost:9200 content')
+    parser.add_argument(
+        '-o', '--old', dest='old', required=True, nargs=2,
+        help='Hostname and index of old ES host, e.g. https://localhost:9200 content'
+    )
+    parser.add_argument(
+        '-n', '--new', dest='new', required=True, nargs=2,
+        help='Hostname of new ES host, e.g. https://localhost:9200 content'
+    )
 
-  return parser.parse_args()
+    return parser.parse_args()
+
 
 def main():
-  args = parse_args()
+    """
+    Run the verification.
+    """
+    args = parse_args()
+    old_es = Elasticsearch([args.old[0]])
+    new_es = Elasticsearch([args.new[0]])
 
-  #compare document count
-  old = requests.get("{}/{}/_stats".format(*args.old))
-  new = requests.get("{}/{}/_stats".format(*args.new))
-  old.raise_for_status()
-  new.raise_for_status()
+    old_index = args.old[1]
+    new_index = args.new[1]
 
-  old_count = old.json()['_all']['total']['docs']['count']
-  new_count = new.json()['_all']['total']['docs']['count']
-  print "{}: Document count ({} = {})".format(
-    old_count, new_count, 'OK' if old_count==new_count else 'FAILURE')
+    old_stats = old_es.indices.stats(index=args.old[1])['indices'][old_index]['total']
+    new_stats = new_es.indices.stats(index=args.new[1])['indices'][new_index]['total']
 
-  old_size = old.json()['_all']['total']['storage']['size_in_bytes']
-  new_size = new.json()['_all']['total']['storage']['size_in_bytes']
-  print "{}: Index size ({} = {})".format(
-    old_size, new_size, 'OK' if old_count==new_count else 'FAILURE')
+    #compare document count
+    old_count = old_stats['docs']['count']
+    new_count = new_stats['docs']['count']
+
+    print "{}: Document count ({} = {})".format(
+        'OK' if old_count == new_count else 'FAILURE', old_count, new_count
+    )
+
+    old_size = old_stats['store']['size_in_bytes']
+    new_size = new_stats['store']['size_in_bytes']
+    print "{}: Index size ({} = {})".format(
+        'OK' if old_count == new_count else 'FAILURE', old_size, new_size
+    )
+
+    matching = 0
+    total = 0
+
+    # Scan for matching documents
+    old_iter = scan(old_es, index=old_index)
+    new_iter = scan(new_es, index=new_index)
+    for (old_elt, new_elt) in izip(old_iter, new_iter):
+        if old_elt['_id'] == new_elt['_id']:
+            matching += 1
+        total += 1
+        if total % 100 == 0:
+            print 'processed {} items'.format(total)
+
+    ratio = float(matching)/total
+    print "{}: Documents matching ({} out of {}, {}%)".format(
+        'OK' if ratio > SCAN_THRESHOLD else 'FAILURE', matching, total, int(ratio * 100)
+    )
+
+    # Take subset
 
 
 """
@@ -56,3 +103,6 @@ can't use scroll with sorting. Maybe just keep changing the seed?
 Alternative: random score with score cutoff? Or script field and search/cutoff
   Might also be able to use track_scores with scan&scroll on 1.5 and a score cutoff
 """
+
+if __name__ == '__main__':
+    main()
