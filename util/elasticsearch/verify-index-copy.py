@@ -2,7 +2,7 @@
 Verifies that an index was correctly copied from one ES host to another.
 """
 
-from itertools import izip
+import itertools
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
@@ -14,6 +14,8 @@ Compare two Elasticsearch indices
 """
 
 SCAN_THRESHOLD = .9
+SCAN_MAX_SIZE = 100000
+SCAN_ITER_STEP = 2
 
 def parse_args():
     """
@@ -31,6 +33,16 @@ def parse_args():
     )
 
     return parser.parse_args()
+
+
+def grouper(iterable, n, fillvalue=None):
+    """
+    Collect data into fixed-length chunks or blocks
+    from the import itertools recipe list: https://docs.python.org/3/library/itertools.html#recipes
+    """
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return itertools.izip_longest(*args)
 
 
 def main():
@@ -66,13 +78,22 @@ def main():
 
     # Scan for matching documents
     old_iter = scan(old_es, index=old_index)
-    new_iter = scan(new_es, index=new_index)
-    for (old_elt, new_elt) in izip(old_iter, new_iter):
-        if old_elt['_id'] == new_elt['_id']:
-            matching += 1
-        total += 1
+    for old_elts in grouper(old_iter, SCAN_ITER_STEP):
+
+        old_elt_ids = [{'_id': elt['_id']} for elt in old_elts if elt is not None]
+        body = {'docs': old_elt_ids}
+
+        search_result = new_es.mget(index=new_index, body=body)
+        for elt in search_result['docs']:
+            matching += 1 if elt['exists'] else 0
+            total += 1
+
         if total % 100 == 0:
             print 'processed {} items'.format(total)
+
+        if total > SCAN_MAX_SIZE:
+            print 'Completed max number of scanned comparisons.'
+            break
 
     ratio = float(matching)/total
     print "{}: Documents matching ({} out of {}, {}%)".format(
