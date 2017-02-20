@@ -27,3 +27,9 @@ playbooks/edx-east/travis-test.yml
 
 ## Local virtualenv
 /venv
+
+
+# iBio don't save hosts
+*.hosts
+*.hosts-test
+
