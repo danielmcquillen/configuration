@@ -15,6 +15,9 @@
     db: "{{ item }}"
     state: present
     encoding: utf8
+    login_host: "{{ MYSQL_LOGIN_HOST }}"
+    login_user: "{{ MYSQL_LOGIN_USER }}"
+    login_password: "{{ MYSQL_LOGIN_PASS }}"
   when: item != None and item != ''
   with_items: "{{ edxlocal_databases }}"
 
@@ -22,7 +25,11 @@
   mysql_user:
     name: "{{ item.user }}"
     password: "{{ item.pass }}"
+    host: "{{ EDXLOCAL_MYSQL_ALLOWED_HOST }}"
     priv: "{{ item.db }}.*:ALL"
+    login_host: "{{ MYSQL_LOGIN_HOST }}"
+    login_user: "{{ MYSQL_LOGIN_USER }}"
+    login_password: "{{ MYSQL_LOGIN_PASS }}"
     append_privs: yes
   when: item.db != None and item.db != ''
   with_items: "{{ edxlocal_database_users }}"
@@ -31,7 +38,11 @@
   mysql_user:
     name: "{{ COMMON_MYSQL_MIGRATE_USER }}"
     password: "{{ COMMON_MYSQL_MIGRATE_PASS }}"
+    host: "{{ EDXLOCAL_MYSQL_ALLOWED_HOST }}"
     priv: "{{ item }}.*:ALL"
+    login_host: "{{ MYSQL_LOGIN_HOST }}"
+    login_user: "{{ MYSQL_LOGIN_USER }}"
+    login_password: "{{ MYSQL_LOGIN_PASS }}"
     append_privs: yes
   when: item != None and item != ''
   with_items: "{{ edxlocal_databases }}"
@@ -40,14 +51,22 @@
   mysql_user:
     name: "api001"
     password: "{{ ANALYTICS_API_DATABASES.default.PASSWORD }}"
+    host: "{{ EDXLOCAL_MYSQL_ALLOWED_HOST }}"
     priv: '{{ ANALYTICS_API_DATABASES.default.NAME }}.*:ALL/reports.*:SELECT'
+    login_host: "{{ MYSQL_LOGIN_HOST }}"
+    login_user: "{{ MYSQL_LOGIN_USER }}"
+    login_password: "{{ MYSQL_LOGIN_PASS }}"
   when: ANALYTICS_API_SERVICE_CONFIG is defined
 
 - name: create read-only reports user for the analytics-api
   mysql_user:
     name: reports001
     password: "{{ ANALYTICS_API_DATABASES.reports.PASSWORD }}"
+    host: "{{ EDXLOCAL_MYSQL_ALLOWED_HOST }}"
     priv: '{{ ANALYTICS_API_DATABASES.reports.NAME }}.*:SELECT'
+    login_host: "{{ MYSQL_LOGIN_HOST }}"
+    login_user: "{{ MYSQL_LOGIN_USER }}"
+    login_password: "{{ MYSQL_LOGIN_PASS }}"
   when: ANALYTICS_API_SERVICE_CONFIG is defined
 
 - name: create a database for the hive metastore
@@ -55,23 +74,38 @@
     db: "{{ HIVE_METASTORE_DATABASE.name }}"
     state: "present"
     encoding: "latin1"
+    login_host: "{{ MYSQL_LOGIN_HOST }}"
+    login_user: "{{ MYSQL_LOGIN_USER }}"
+    login_password: "{{ MYSQL_LOGIN_PASS }}"
   when: HIVE_METASTORE_DATABASE is defined
 
 - name: setup the edx-notes-api db user
   mysql_user:
     name: "{{ EDX_NOTES_API_MYSQL_DB_USER }}"
     password: "{{ EDX_NOTES_API_MYSQL_DB_PASS }}"
+    host: "{{ EDXLOCAL_MYSQL_ALLOWED_HOST }}"
     priv: "{{ EDX_NOTES_API_MYSQL_DB_NAME }}.*:SELECT,INSERT,UPDATE,DELETE"
+    login_host: "{{ MYSQL_LOGIN_HOST }}"
+    login_user: "{{ MYSQL_LOGIN_USER }}"
+    login_password: "{{ MYSQL_LOGIN_PASS }}"
   when: EDX_NOTES_API_MYSQL_DB_USER is defined
 
 - name: setup the read-only db user
   mysql_user:
     name: "{{ COMMON_MYSQL_READ_ONLY_USER }}"
     password: "{{ COMMON_MYSQL_READ_ONLY_PASS }}"
+    host: "{{ EDXLOCAL_MYSQL_ALLOWED_HOST }}"
     priv: "*.*:ALL"
+    login_host: "{{ MYSQL_LOGIN_HOST }}"
+    login_user: "{{ MYSQL_LOGIN_USER }}"
+    login_password: "{{ MYSQL_LOGIN_PASS }}"
 
 - name: setup the admin db user
   mysql_user:
     name: "{{ COMMON_MYSQL_ADMIN_USER }}"
     password: "{{ COMMON_MYSQL_ADMIN_PASS }}"
+    host: "{{ EDXLOCAL_MYSQL_ALLOWED_HOST }}"
     priv: "*.*:CREATE USER"
+    login_host: "{{ MYSQL_LOGIN_HOST }}"
+    login_user: "{{ MYSQL_LOGIN_USER }}"
+    login_password: "{{ MYSQL_LOGIN_PASS }}"
