@@ -32,6 +32,8 @@ edx_ansible_debian_pkgs:
   - curl
   - python-yaml
   - python-mysqldb
+  - libssl-dev
+  - libffi-dev
 
 edx_ansible_app_dir: "{{ COMMON_APP_DIR }}/edx_ansible"
 edx_ansible_code_dir: "{{ edx_ansible_app_dir }}/edx_ansible"
