@@ -1,0 +1,119 @@
+
+
+# Installs all Open EdX MYSQL databases on an RDS instance, with the assumption
+# that RDS will be hosting all MYSQL databases for various servers/apps, except for Insights.
+# Based on edxlocal and create_db_and_users.yml
+
+---
+
+- name: Install mysql dependencies
+  apt:
+    name: "{{ item }}"
+    install_recommends: yes
+    state: present
+  with_items: "{{ mysql_debian_pkgs }}"
+  sudo: yes
+
+- name: create databases
+  mysql_db:
+    db: "{{ item }}"
+    state: present
+    encoding: utf8
+    login_host: "{{ RDS_MYSQL_HOST }}"
+    login_user: "{{ EDXAPP_MYSQL_USER_ADMIN }}"
+    login_password: "{{ EDXAPP_MYSQL_PASSWORD_ADMIN }}"
+  when: item != None and item != ''
+  with_items: "{{ edx_ibio_databases }}"
+
+- name: create database users
+  mysql_user:
+    name: "{{ item.user }}"
+    password: "{{ item.pass }}"
+    host: "%"
+    priv: "{{ item.db }}.*:ALL"
+    append_privs: yes
+    login_host: "{{ RDS_MYSQL_HOST }}"
+    login_user: "{{ EDXAPP_MYSQL_USER_ADMIN }}"
+    login_password: "{{ EDXAPP_MYSQL_PASSWORD_ADMIN }}"
+  when: item.db != None and item.db != ''
+  with_items: "{{ edx_ibio_database_users }}"
+
+- name: setup the migration db user
+  mysql_user:
+    name: "{{ COMMON_MYSQL_MIGRATE_USER }}"
+    password: "{{ COMMON_MYSQL_MIGRATE_PASS }}"
+    host: "%"
+    priv: "%.*:ALL"
+    append_privs: yes
+    login_host: "{{ RDS_MYSQL_HOST }}"
+    login_user: "{{ EDXAPP_MYSQL_USER_ADMIN }}"
+    login_password: "{{ EDXAPP_MYSQL_PASSWORD_ADMIN }}"
+
+- name: create api user for the analytics api
+  mysql_user:
+    name: api001
+    password: "{{ ANALYTICS_API_DATABASES.default.PASSWORD }}"
+    host: "%"
+    priv: "{{ ANALYTICS_API_DATABASES.default.NAME }}.*:ALL/reports.*:SELECT"
+    login_host: "{{ RDS_MYSQL_HOST }}"
+    login_user: "{{ EDXAPP_MYSQL_USER_ADMIN }}"
+    login_password: "{{ EDXAPP_MYSQL_PASSWORD_ADMIN }}"
+  when: ANALYTICS_API_SERVICE_CONFIG is defined
+
+- name: create read-only reports user for the analytics-api
+  mysql_user:
+    name: "reports001"
+    password: "{{ ANALYTICS_API_DATABASES.reports.PASSWORD }}"
+    host: "%"
+    priv: "{{ ANALYTICS_API_DATABASES.reports.NAME }}.*:SELECT"
+    login_host: "{{ RDS_MYSQL_HOST }}"
+    login_user: "{{ EDXAPP_MYSQL_USER_ADMIN }}"
+    login_password: "{{ EDXAPP_MYSQL_PASSWORD_ADMIN }}"
+  when: ANALYTICS_API_SERVICE_CONFIG is defined
+
+- name: create a database for the hive metastore
+  mysql_db:
+    db: "{{ HIVE_METASTORE_DATABASE.name }}"
+    state: "present"
+    encoding: "latin1"
+    login_host: "{{ RDS_MYSQL_HOST }}"
+    login_user: "{{ EDXAPP_MYSQL_USER_ADMIN }}"
+    login_password: "{{ EDXAPP_MYSQL_PASSWORD_ADMIN }}"
+  when: HIVE_METASTORE_DATABASE is defined
+
+- name: setup the edx-notes-api db user
+  mysql_user:
+    name: "{{ EDX_NOTES_API_MYSQL_DB_USER }}"
+    password: "{{ EDX_NOTES_API_MYSQL_DB_PASS }}"
+    priv: "{{ EDX_NOTES_API_MYSQL_DB_NAME }}.*:SELECT,INSERT,UPDATE,DELETE"
+    host: "%"
+    login_host: "{{ RDS_MYSQL_HOST }}"
+    login_user: "{{ EDXAPP_MYSQL_USER_ADMIN }}"
+    login_password: "{{ EDXAPP_MYSQL_PASSWORD_ADMIN }}"
+  when: EDX_NOTES_API_MYSQL_DB_USER is defined
+
+
+# NOTE:
+# RDS does not allow grant *.*:(Some privilege),
+# You have to use the % wildcard, like grant %.*:(some priv)
+
+# This user has "ALL" privileges in original Open EdX play, but I think
+# it's supposed to be SELECT.
+- name: setup the read-only db user
+  mysql_user:
+    name: "{{ COMMON_MYSQL_READ_ONLY_USER }}"
+    password: "{{ COMMON_MYSQL_READ_ONLY_PASS }}"
+    host: "%"
+    priv: "%.*:SELECT"
+    login_host: "{{ RDS_MYSQL_HOST }}"
+    login_user: "{{ EDXAPP_MYSQL_USER_ADMIN }}"
+    login_password: "{{ EDXAPP_MYSQL_PASSWORD_ADMIN }}"
+
+
+# We don't create an admin user as in sandbox, as we're using
+# the RDS root user as the admin user.
+#- name: setup the admin db user
+#  mysql_user:
+#    name: "{{ COMMON_MYSQL_ADMIN_USER }}"
+#    password: "{{ COMMON_MYSQL_ADMIN_PASS }}"
+#    priv: "%.*:ALL"

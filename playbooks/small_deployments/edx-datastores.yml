@@ -1,0 +1,44 @@
+---
+
+# Example sandbox configuration
+# for single server community
+# installs
+
+# Add to vars when implementing discovery:
+# Discovery elasticsearch - docs say you don't have to include port, but I found you actually do otherwise make command in discovery fails
+# when trying to call ES on AWS.
+#   DISCOVERY_ELASTICSEARCH_URL: "{{aws_datastore_private_ip}}:9200"
+
+- name: Configure instance(s)
+  hosts: datastores
+  sudo: True
+  gather_facts: True
+
+  vars:
+    aws_datastore_private_ip: "{{ groups['datastores_internal'][0] }}"
+    MONGO_BIND_IP: "{{ aws_datastore_private_ip }}"
+
+  vars_files:
+    - "../roles/edxapp/defaults/main.yml"
+    - "../roles/forum/defaults/main.yml"
+    - "../roles/xqueue/defaults/main.yml"
+    - "../roles/programs/defaults/main.yml"
+    - "../roles/analytics_pipeline/defaults/main.yml"
+    - "../roles/analytics_api/defaults/main.yml"
+    - "../roles/hive/defaults/main.yml"
+
+  roles:
+    - role: memcache
+    - role: mongo
+    - role: rabbitmq
+      rabbitmq_ip: "{{aws_datastore_private_ip}}"
+    - role: oraclejdk
+    - role: elasticsearch
+    - role: ibio-rds  #instead of edxlocal
+    - role: edx_ansible
+    - role: datadog
+      when: COMMON_ENABLE_DATADOG
+    - role: splunkforwarder
+      when: COMMON_ENABLE_SPLUNKFORWARDER
+    - role: newrelic
+      when: COMMON_ENABLE_NEWRELIC

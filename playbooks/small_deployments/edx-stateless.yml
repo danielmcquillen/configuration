@@ -1,0 +1,125 @@
+---
+
+# Stateless app server configuration, designed to be used with external mysql,
+# mongo, rabbitmq, and elasticsearch services.
+
+# iBio: BE SURE TO SET PRIVATE IP FOR DATASTORES BELOW....
+
+- name: Configure instance(s)
+  hosts: stateless
+  become: True
+  gather_facts: True
+
+  vars:
+    aws_datastore_private_ip: "{{ groups['datastores_internal'][0] }}"
+    edx_platform_version: 'open-release/ficus.master'
+    migrate_db: 'yes'
+    openid_workaround: True
+    ENABLE_ECOMMERCE: False  # Disable ecommerce by default
+    EDXAPP_MYSQL_HOST: "{{ RDS_MYSQL_HOST }}"
+    EDXAPP_MYSQL_CSMH_HOST: "{{ RDS_MYSQL_HOST }}"
+    EDXAPP_ELASTIC_SEARCH_CONFIG:
+      - host: "{{ aws_datastore_private_ip }}"
+        port: 9200
+    EDXAPP_MEMCACHE: ["{{ aws_datastore_private_ip }}:11211"]
+    #DISCOVERY_MEMCACHE: ["{{ aws_datastore_private_ip }}:11211"]
+    # elasticsearch
+    # docs say you don't have to include port, but I found you actually do otherwise make command in discovery fails
+    # when trying to call ES on AWS.
+    #DISCOVERY_ELASTICSEARCH_URL: "{{aws_datastore_private_ip}}:9200"
+    EDXAPP_RABBIT_HOSTNAME: "{{ aws_datastore_private_ip }}"
+    FORUM_ELASTICSEARCH_HOST: "{{ aws_datastore_private_ip }}"
+    XQUEUE_RABBITMQ_HOSTNAME: "{{ aws_datastore_private_ip }}"
+    XQUEUE_MYSQL_HOST: "{{ RDS_MYSQL_HOST }}"
+    # We need an array for these MONGO Settings, so use the
+    # whole "datastores" group, even though there's only one
+    FORUM_MONGO_HOSTS: "{{ groups['datastores_internal'] }}"
+    EDXAPP_MONGO_HOSTS: "{{ groups['datastores_internal'] }}"
+    FORUM_SINATRA_ENV: "production"
+    FORUM_RACK_ENV: "production"
+    EDXAPP_LMS_NGINX_PORT: '80'
+
+
+
+
+  pre_tasks:
+    - name: Report private IP stateless will use for datastores
+      debug:
+        msg: "We'll use this IP to set the datastore IP {{ aws_datastore_private_ip }}"
+
+    - name: Check for migration
+      when: migrate_db is defined and migrate_db|lower == "yes"
+      debug:
+        msg: "IMPORTANT: We're going to attempt to migrate the DB!"
+
+  roles:
+
+
+
+    # Ensure we have no known security vulnerabilities
+    - security
+
+    # Server setup
+    - swapfile
+
+    # Nginx reverse proxy
+    - role: nginx
+      nginx_sites:
+      - certs
+      - cms
+      - lms
+      - forum
+      - xqueue
+      #- discovery
+      nginx_default_sites:
+      - lms
+
+    # Main EdX application
+    # https://github.com/edx/edx-platform
+    - role: edxapp
+      celery_worker: True
+    - edxapp
+
+    # Discussion forums
+    # https://github.com/edx/cs_comments_service
+    - forum
+
+    # Discovery
+    # https://github.com/edx/discover
+    # We need this to group courses into larger "Catalogs"
+    # Having an issue with this when building ficus. Commenting out for now
+    # - discovery
+
+    # Notifications service
+    # https://github.com/edx/notifier
+    - role: notifier
+      NOTIFIER_DIGEST_TASK_INTERVAL: '5'
+
+    # XQueue interface for communicating with external grader services
+    # https://github.com/edx/xqueue
+    - role: xqueue
+      update_users: True
+
+    # Certificate generation
+    # https://github.com/edx/edx-certificates
+    - certs
+
+    # Email sending
+    - postfix_queue
+
+    # Copy logs to AWS -- let's hold on this...there might
+    # be a better way to manage logs
+    #- aws
+
+
+    # memcached
+    - role: memcache
+      when: "'localhost' in ' '.join(EDXAPP_MEMCACHE)"
+
+    # Optional extras
+    - role: datadog
+      when: COMMON_ENABLE_DATADOG
+    - role: splunkforwarder
+      when: COMMON_ENABLE_SPLUNKFORWARDER
+    - role: newrelic
+      when: COMMON_ENABLE_NEWRELIC

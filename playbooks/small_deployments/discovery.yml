@@ -1,0 +1,56 @@
+- name: Deploy edX Course Discovery Service
+  hosts: stateless
+  become: True
+  gather_facts: True
+
+  vars:
+    aws_datastore_private_ip: "{{ groups['datastores_internal'][0] }}"
+    edx_platform_version: 'open-release/ficus.master'
+    migrate_db: 'yes'
+    openid_workaround: True
+    ENABLE_ECOMMERCE: False  # Disable ecommerce by default
+    EDXAPP_MYSQL_HOST: "{{ RDS_MYSQL_HOST }}"
+    EDXAPP_MYSQL_CSMH_HOST: "{{ RDS_MYSQL_HOST }}"
+    EDXAPP_ELASTIC_SEARCH_CONFIG:
+      - host: "{{ aws_datastore_private_ip }}"
+        port: 9200
+    EDXAPP_MEMCACHE: ["{{ aws_datastore_private_ip }}:11211"]
+    DISCOVERY_MEMCACHE: ["{{ aws_datastore_private_ip }}:11211"]
+    EDXAPP_RABBIT_HOSTNAME: "{{ aws_datastore_private_ip }}"
+    FORUM_ELASTICSEARCH_HOST: "{{ aws_datastore_private_ip }}"
+    XQUEUE_RABBITMQ_HOSTNAME: "{{ aws_datastore_private_ip }}"
+    XQUEUE_MYSQL_HOST: "{{ RDS_MYSQL_HOST }}"
+    # We need an array for these MONGO Settings, so use the
+    # whole "datastores" group, even though there's only one
+    FORUM_MONGO_HOSTS: "{{ groups['datastores_internal'] }}"
+    EDXAPP_MONGO_HOSTS: "{{ groups['datastores_internal'] }}"
+    FORUM_SINATRA_ENV: "production"
+    FORUM_RACK_ENV: "production"
+    ENABLE_DATADOG: False
+    ENABLE_SPLUNKFORWARDER: False
+    ENABLE_NEWRELIC: False
+    CLUSTER_NAME: 'discovery'
+
+  roles:
+
+    # iBio: Not sure we need this at the moment
+    # - aws
+
+    # iBio: Make sure correct users have been added to RDS db
+    # - ibio-rds
+
+    # - role: automated
+    #  AUTOMATED_USERS: "{{ DISCOVERY_AUTOMATED_USERS | default({}) }}"
+
+    - role: nginx
+      nginx_default_sites:
+        - discovery
+
+    - discovery
+
+    - role: datadog
+      when: COMMON_ENABLE_DATADOG
+    - role: splunkforwarder
+      when: COMMON_ENABLE_SPLUNKFORWARDER
+    - role: newrelic
+      when: COMMON_ENABLE_NEWRELIC
