@@ -197,6 +197,9 @@
     password: "{{ ANALYTICS_PIPELINE_OUTPUT_DATABASE.password }}"
     priv: 'acceptance%.*:ALL'
     append_privs: yes
+    login_host: "{{ MYSQL_LOGIN_HOST }}"
+    login_user: "{{ MYSQL_LOGIN_USER }}"
+    login_password: "{{ MYSQL_LOGIN_PASS }}"
   tags:
     - install
     - install:configuration
