@@ -29,7 +29,8 @@ playbooks/edx-east/travis-test.yml
 /venv
 
 
-# iBio don't save hosts
+# iBio : don't save hosts
 *hosts
 *hosts-test
-
+# iBio : or Ansible retries...
+*.retry
