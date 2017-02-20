@@ -9,11 +9,11 @@ logpath={{ mongo_logpath }}
 
 logappend={{ mongo_logappend }}
 
-{# Bind to all ips(default) if in clustered mode, 
+{# Bind to all ips(default) if in clustered mode,
    otherwise only to the specified local ip.
 #}
 {% if not MONGO_CLUSTERED %}
-bind_ip = {{ MONGO_BIND_IP }}
+bind_ip = 127.0.0.1{{ "," + MONGO_BIND_IP if MONGO_BIND_IP }}
 {% endif %}
 
 {% if MONGO_USE_SMALLFILES %}
