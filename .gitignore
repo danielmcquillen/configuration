@@ -30,6 +30,6 @@ playbooks/edx-east/travis-test.yml
 
 
 # iBio don't save hosts
-*.hosts
-*.hosts-test
+*hosts
+*hosts-test
 
