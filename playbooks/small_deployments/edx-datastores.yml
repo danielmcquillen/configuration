@@ -16,6 +16,7 @@
 
   vars:
     aws_datastore_private_ip: "{{ groups['datastores_internal'][0] }}"
+    edx_platform_version: 'open-release/ficus.master'
     MONGO_BIND_IP: "{{ aws_datastore_private_ip }}"
 
   vars_files:
