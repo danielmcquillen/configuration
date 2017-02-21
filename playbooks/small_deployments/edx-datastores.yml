@@ -18,6 +18,12 @@
     aws_datastore_private_ip: "{{ groups['datastores_internal'][0] }}"
     edx_platform_version: 'open-release/ficus.master'
     MONGO_BIND_IP: "{{ aws_datastore_private_ip }}"
+    OPENEDX_RELEASE: 'open-release/ficus.master'
+    edx_platform_version: '{{ OPENEDX_RELEASE | default("master") }}'
+    certs_version: '{{ OPENEDX_RELEASE | default("master") }}'
+    forum_version: '{{ OPENEDX_RELEASE | default("master") }}'
+    xqueue_version: '{{ OPENEDX_RELEASE | default("master") }}'
+    demo_version: '{{ OPENEDX_RELEASE | default("master") }}'
 
   vars_files:
     - "../roles/edxapp/defaults/main.yml"
