@@ -7,4 +7,3 @@ export PID='/var/tmp/notifier-scheduler.pid'
 export LANG=en_US.UTF-8
 
 {{ NOTIFIER_VENV_DIR }}/bin/python manage.py celery worker -l {{ NOTIFIER_LOG_LEVEL }}
-

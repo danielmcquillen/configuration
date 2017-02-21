@@ -63,7 +63,7 @@
 
 - name: iBio sanity check
   debug:
-    msg: "MONGOHQ_URL is {{ MONGOHQ_URL }}"
+    msg: "MONGOHQ_URL is {{ FORUM_MONGO_URL }}"
 
 - name: create {{ forum_data_dir }}
   file:
