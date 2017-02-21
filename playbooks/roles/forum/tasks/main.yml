@@ -48,7 +48,7 @@
   template:
     src: forum_env.j2
     dest: "{{ forum_app_dir }}/forum_env"
-    owner: "{{ forum_user }}" 
+    owner: "{{ forum_user }}"
     group: "{{ common_web_user }}"
     mode: 0644
   notify:
@@ -56,6 +56,14 @@
   tags:
     - install
     - install:base
+
+- name: iBio sanity check
+  debug:
+    msg: "FORUM_ELASTICSEARCH_HOST is {{ FORUM_ELASTICSEARCH_HOST }}"
+
+- name: iBio sanity check
+  debug:
+    msg: "MONGOHQ_URL is {{ MONGOHQ_URL }}"
 
 - name: create {{ forum_data_dir }}
   file:
@@ -67,7 +75,7 @@
   tags:
     - install
     - install:base
-    
+
 - include: deploy.yml
-  tags: 
+  tags:
     - deploy
