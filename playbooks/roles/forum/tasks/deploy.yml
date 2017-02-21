@@ -64,17 +64,17 @@
     - install
     - install:app-requirements
 
-# iBio : TODO Confirm we need this.
-- name: initialize elasticsearch
-  command: "{{ forum_code_dir }}/bin/rake search:initialize"
-  args:
-    chdir: "{{ forum_code_dir }}"
-  become_user: "{{ forum_user }}"
-  environment: "{{ forum_environment }}"
-  when: migrate_db is defined and migrate_db|lower == "yes"
-  tags:
-    - migrate
-    - migrate:db
+# iBio : We don't need this for Ficus. Used in edx/configuration master
+#- name: initialize elasticsearch
+#  command: "{{ forum_code_dir }}/bin/rake search:initialize"
+#  args:
+#    chdir: "{{ forum_code_dir }}"
+#  become_user: "{{ forum_user }}"
+#  environment: "{{ forum_environment }}"
+#  when: migrate_db is defined and migrate_db|lower == "yes"
+#  tags:
+#    - migrate
+#    - migrate:db
 
   # call supervisorctl update. this reloads
   # the supervisorctl config and restarts
