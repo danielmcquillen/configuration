@@ -5,7 +5,7 @@
 # which is meant to work alongside a 'stateless' EC2 instance running main apps like edxapp, forums, etc.
 #
 # Important note: this playbook is customized to work with a pre-existing AWS RDS MySQL instance,
-# whose endpoint I set in server-vars.yml as # which I set in server-vars.yml as RDS_MYSQL_HOST.
+# whose endpoint I set in server-vars.yml as RDS_MYSQL_HOST.
 # This is different from the original edx-datastores.yml, which builds a local MySQL.
 #
 # This playbook expects the private subnet IP of datastores EC2 instance to
