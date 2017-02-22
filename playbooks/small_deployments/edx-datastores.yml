@@ -1,13 +1,18 @@
 ---
 
-# Example sandbox configuration
-# for single server community
-# installs
+# iBio version of edx-datastores.yml by @feanil from Open edX
+# This playbook builds all 'datastore' type apps on a pre-existing EC2 instance,
+# which is meant to work alongside a 'stateless' EC2 instance running main apps like edxapp, forums, etc.
+#
+# Important note: this playbook is customized to work with a pre-existing AWS RDS MySQL instance,
+# whose endpoint I set in server-vars.yml as # which I set in server-vars.yml as RDS_MYSQL_HOST.
+# This is different from the original edx-datastores.yml, which builds a local MySQL.
+#
+# This playbook expects the private subnet IP of datastores EC2 instance to
+# be defined in the hosts file under the "datastores_internal" group.
+#
+# A final caveat is that many would say, with some accuracy, that I don't know what I'm doing.
 
-# Add to vars when implementing discovery:
-# Discovery elasticsearch - docs say you don't have to include port, but I found you actually do otherwise make command in discovery fails
-# when trying to call ES on AWS.
-#   DISCOVERY_ELASTICSEARCH_URL: "{{aws_datastore_private_ip}}:9200"
 
 - name: Configure instance(s)
   hosts: datastores
@@ -20,6 +25,7 @@
     MONGO_BIND_IP: "{{ aws_datastore_private_ip }}"
     OPENEDX_RELEASE: 'open-release/ficus.master'
     edx_platform_version: '{{ OPENEDX_RELEASE | default("master") }}'
+    # Not sure if I need these but setting explicitly anyways...
     certs_version: '{{ OPENEDX_RELEASE | default("master") }}'
     forum_version: '{{ OPENEDX_RELEASE | default("master") }}'
     xqueue_version: '{{ OPENEDX_RELEASE | default("master") }}'
