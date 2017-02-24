@@ -39,6 +39,11 @@ edx_ibio_database_users:
       pass: "{{ EDXAPP_MYSQL_PASSWORD | default(None) }}"
     }
   - {
+      db: "{{ EDXAPP_MYSQL_REPLICA_DB_NAME | default(None) }}",
+      user: "{{ EDXAPP_MYSQL_REPLICA_USER | default(None) }}",
+      pass: "{{ EDXAPP_MYSQL_REPLICA_PASSWORD | default(None) }}"
+    }
+  - {
       db: "{{ EDXAPP_MYSQL_CSMH_DB_NAME | default(None) }}",
       user: "{{ EDXAPP_MYSQL_CSMH_USER | default(None) }}",
       pass: "{{ EDXAPP_MYSQL_CSMH_PASSWORD | default(None) }}"
