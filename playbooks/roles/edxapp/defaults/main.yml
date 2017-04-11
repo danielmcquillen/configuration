@@ -236,7 +236,10 @@ EDXAPP_FEATURES:
   ENABLE_CORS_HEADERS: false
   ENABLE_CROSS_DOMAIN_CSRF_COOKIE: false
   ENABLE_COUNTRY_ACCESS: false
-  ENABLE_VIDEO_BEACON: false
+  #iBio: We want video interaction tracking by default
+  ENABLE_VIDEO_BEACON: true
+  #iBio: We want open badges by default
+  ENABLE_OPENBADGES: true
   ENABLE_ONLOAD_BEACON: false
   ENABLE_EDXNOTES: "{{ EDXAPP_ENABLE_EDXNOTES }}"
   ENABLE_CREDIT_API: "{{ EDXAPP_ENABLE_CREDIT_API }}"
@@ -248,7 +251,7 @@ EDXAPP_FEATURES:
   CUSTOM_COURSES_EDX: "{{ EDXAPP_CUSTOM_COURSES_EDX }}"
   ENABLE_CSMH_EXTENDED: "{{ EDXAPP_ENABLE_CSMH_EXTENDED }}"
   ENABLE_READING_FROM_MULTIPLE_HISTORY_TABLES: "{{ EDXAPP_ENABLE_READING_FROM_MULTIPLE_HISTORY_TABLES }}"
-  #DMcQ: Enabled these next settings by default. (At the moment theree are no EDXAPP vars defined by the official configuration repo)
+  #iBio: Enabled these next settings by default. (At the moment theree are no EDXAPP vars defined by the official configuration repo)
   ENABLE_LIBRARY_INDEX: true
   ENABLE_COURSEWARE_INDEX: true
   CERTIFICATES_HTML_VIEW: true
