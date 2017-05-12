@@ -1,0 +1,33 @@
+
+
+# Installs initial requirements on server, following pattern set by github.com/edx/configuration/util/install/sandbox.sh
+# Since iBio ansible is run locally, we need to replicate these shell file install steps in ansible plays here.
+
+---
+
+- name: update apt packages
+  apt: >
+    update_cache=yes
+    cache_valid_time=3600
+
+- name: upgrade apt packages
+  apt: upgrade=yes
+
+- name: Install python-software-properties
+  apt:
+    name: "python-software-properties"
+    install_recommends: yes
+    state: present
+  sudo: yes
+
+- name: Add repository ppa:ubuntu-toolchain-r/test
+  command: sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  sudo: yes
+
+- name: Install other dependencies
+  apt:
+    name: "{{ item }}"
+    install_recommends: yes
+    state: present
+  with_items: "{{ initial_ibio_small_deployments_dependencies }}"
+  sudo: yes

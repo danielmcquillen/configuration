@@ -2,15 +2,39 @@
 
 # Stateless app server configuration, designed to be used with external mysql,
 # mongo, rabbitmq, and elasticsearch services.
+- name: EdX Bootstrap instance(s)
+  hosts: stateless
+  gather_facts: no
+  become: True
+  roles:
+    - python
 
-# iBio: BE SURE TO SET PRIVATE IP FOR DATASTORES BELOW....
 
+# Since we run everything from Ansible, we have to use our own play to install
+# some of the things that would have been installed by sandbox.sh (if one was building Ubuntu native)
+- name: iBio Bootstrap instance(s)
+  hosts: stateless
+  gather_facts: no
+  become: True
+  roles:
+    - ibio-bootstrap
+
+
+# At this point the stateless server should be bootstrapped and ready for the
+# various edx applications to be installed
 - name: Configure instance(s)
   hosts: stateless
   become: True
   gather_facts: True
 
   vars:
+    # These settings are in the edx version of edx-stateless
+    migrate_db: 'yes'
+    openid_workaround: True
+    EDXAPP_LMS_NGINX_PORT: '80'
+    ENABLE_ECOMMERCE: False  # Disable ecommerce by default
+
+    # These are iBio specific settings for stateless
     aws_datastore_private_ip: "{{ groups['datastores_internal'][0] }}"
     OPENEDX_RELEASE: 'open-release/ficus.master'
     edx_platform_version: '{{ OPENEDX_RELEASE | default("master") }}'
@@ -18,9 +42,6 @@
     forum_version: '{{ OPENEDX_RELEASE | default("master") }}'
     xqueue_version: '{{ OPENEDX_RELEASE | default("master") }}'
     demo_version: '{{ OPENEDX_RELEASE | default("master") }}'
-    migrate_db: 'yes'
-    openid_workaround: True
-    ENABLE_ECOMMERCE: False  # Disable ecommerce by default
     EDXAPP_MYSQL_HOST: "{{ RDS_MYSQL_HOST }}"
     EDXAPP_MYSQL_CSMH_HOST: "{{ RDS_MYSQL_HOST }}"
     EDXAPP_ELASTIC_SEARCH_CONFIG:
@@ -44,9 +65,6 @@
       - "{{ aws_datastore_private_ip }}"
     FORUM_SINATRA_ENV: "production"
     FORUM_RACK_ENV: "production"
-    EDXAPP_LMS_NGINX_PORT: '80'
-
-
 
 
   pre_tasks:
@@ -58,7 +76,6 @@
       debug:
         msg: "FORUM_MONGO_URL is {{ FORUM_MONGO_URL }}"
 
-
     - name: Forum sanity check part 2
       debug:
         msg: "FORUM_MONGO_HOSTS is {{ FORUM_ELASTICSEARCH_HOST }}"
@@ -69,8 +86,6 @@
         msg: "IMPORTANT: We're going to attempt to migrate the DB!"
 
   roles:
-
-
 
     # Ensure we have no known security vulnerabilities
     - security
@@ -86,7 +101,6 @@
       - lms
       - forum
       - xqueue
-      #- discovery
       nginx_default_sites:
       - lms
 

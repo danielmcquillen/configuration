@@ -14,6 +14,14 @@
 # A final caveat is that many would say, with some accuracy, that I don't know what I'm doing.
 
 
+- name: Bootstrap instance(s)
+  hosts: datastores
+  gather_facts: no
+  become: True
+  roles:
+    - python
+
+
 - name: Configure instance(s)
   hosts: datastores
   sudo: True
@@ -40,6 +48,8 @@
     - "../roles/hive/defaults/main.yml"
 
   roles:
+    - role: python
+    - role: security
     - role: memcache
     - role: mongo
     - role: rabbitmq

@@ -1,0 +1,21 @@
+---
+initial_ibio_small_deployments_dependencies:
+  - build-essential
+  - software-properties-common
+  - curl
+  - git-core
+  - libxml2-dev
+  - libxslt1-dev
+  - python-pip
+  - libmysqlclient-dev
+  - python-apt
+  - python-dev
+  - libxmlsec1-dev
+  - libfreetype6-dev
+  - swig
+  - gcc
+  - g++
+  - python-jinja2
+  - libffi-dev
+  - libssl-dev
+  - python-yaml
