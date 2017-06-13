@@ -1,0 +1,28 @@
+user www-data;
+worker_processes 2;
+
+events {
+        worker_connections 768;
+        multi_accept on;
+}
+
+http {
+    server {
+      listen 80 default_server;
+      listen [::]:80 default_server ipv6only=on;
+      root /usr/share/nginx/html;
+      location /maintenance.html {
+        # allow access to the maintenance page
+      }
+      location /health_check {
+        # return 200 for the load balancer
+        access_log off;
+        return 200 'ok';
+        add_header Content-Type text/plain;
+      }
+      location / {
+        return 503;
+      }
+      error_page 503 /maintenance.html;
+    }
+}

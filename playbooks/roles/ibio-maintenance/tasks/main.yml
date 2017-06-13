@@ -1,0 +1,30 @@
+---
+
+# Setup our "maintenance page" server to show a basic page and return the correct (503) HTTP code
+# DMcQ: TODO I have yet to test this playbook after adding tasks to copy maintenance.html
+
+- name: Install the nginx package
+  apt:
+    name: nginx
+    state: latest
+    force: yes
+    update_cache: yes
+  notify: restart nginx
+
+- name: Make sure html directory exists
+  file:
+    path: "/usr/share/nginx/html"
+    state: "directory"
+    owner: "{{username}}"
+    group: "{{username}}"
+    mode: 0644
+
+- name: Install maintenance page
+  template:
+    src: "maintenance.html"
+    dest: "/usr/share/nginx/html/maintenance.html"
+
+- name: Install maintenance image
+  template:
+    src: "we-will-be-right-back.png"
+    dest: "/usr/share/nginx/html/we-will-be-right-back.png"
