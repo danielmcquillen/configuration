@@ -69,6 +69,19 @@
     login_password: "{{ MYSQL_LOGIN_PASS }}"
   when: ANALYTICS_API_SERVICE_CONFIG is defined
 
+# iBio: Adding missing Insights db user
+
+- name: create insights user
+  mysql_user:
+    name: "{{ INSIGHTS_DATABASE_USER }}"
+    password: "{{ INSIGHTS_DATABASE_PASSWORD }}"
+    host: "{{ INSIGHTS_DATABASE_HOST }}"
+    priv: "{{ INSIGHTS_DATABASE_NAME }}.*:ALL"
+    login_host: "{{ MYSQL_LOGIN_HOST }}"
+    login_user: "{{ MYSQL_LOGIN_USER }}"
+    login_password: "{{ MYSQL_LOGIN_PASS }}"
+  when: INSIGHTS_DATABASES is defined
+
 - name: create a database for the hive metastore
   mysql_db:
     db: "{{ HIVE_METASTORE_DATABASE.name }}"
