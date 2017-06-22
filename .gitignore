@@ -30,3 +30,7 @@ playbooks/edx-east/travis-test.yml
 
 ## Ansible Artifacts
 *.retry
+
+## iBio hosts
+hosts
+hosts-test
