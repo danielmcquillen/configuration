@@ -127,7 +127,7 @@
   with_items: "{{ requirement_file_stats.results }}"
   tags:
     - install
-    - install:code∑
+    - install:code
     - install:app-requirements
 
 - name: Create the virtualenv to install the Python requirements
