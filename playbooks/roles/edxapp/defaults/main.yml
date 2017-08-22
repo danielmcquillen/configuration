@@ -475,8 +475,8 @@ EDXAPP_REGISTRATION_EXTRA_FIELDS:
   level_of_education: "optional"
   gender: "optional"
   year_of_birth: "optional"
-  mailing_address: "optional"
-  goals: "optional"
+  mailing_address: "hidden"
+  goals: "hidden"
   honor_code: "required"
   city: "hidden"
   country: "hidden"
@@ -823,6 +823,7 @@ generic_cache_config: &default_generic_cache
 
 generic_env_config:  &edxapp_generic_env
   AWS_EVENT_TRACKER_ARN: "{{ EDXAPP_AWS_EVENT_TRACKER_ARN }}"
+  AWS_EVENT_TRACKER_REGION: "{{ EDXAPP_AWS_EVENT_TRACKER_REGION }}"
   ECOMMERCE_PUBLIC_URL_ROOT: "{{ EDXAPP_ECOMMERCE_PUBLIC_URL_ROOT }}"
   ECOMMERCE_API_URL: "{{ EDXAPP_ECOMMERCE_API_URL }}"
   COURSE_CATALOG_API_URL: "{{ EDXAPP_COURSE_CATALOG_API_URL }}"
